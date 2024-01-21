@@ -1,16 +1,10 @@
 import { useEffect } from 'react';
-import {
-  Box,
-  Text,
-  VStack,
-  Heading,
-  Button,
-  ButtonText,
-} from '@gluestack-ui/themed';
+import { Box, Text, VStack, ScrollView } from '@gluestack-ui/themed';
 
 import RequestHeaders from './requestHeaders';
-import KeyValueInput from './keyValueInput';
-import JsonTextArea from './jsonTextArea';
+import RequestQuery from './requestQuery';
+import RequestBody from './requestBody';
+import RequestDelete from './requestDelete';
 
 const RequestPage = ({
   httpMethod,
@@ -18,10 +12,10 @@ const RequestPage = ({
   setRhKeys,
   rhValues,
   setRhValues,
-  theKeys,
-  setTheKeys,
-  theValues,
-  setTheValues,
+  rqKeys,
+  setRqKeys,
+  rqValues,
+  setRqValues,
   body,
   setBody,
 }) => {
@@ -53,134 +47,80 @@ const RequestPage = ({
     setRhValues(['']);
   };
 
-  // request
+  // request query
   const addKeyValue = () => {
-    setTheKeys([...theKeys, '']);
-    setTheValues([...theValues, '']);
+    setRqKeys([...rqKeys, '']);
+    setRqValues([...rqValues, '']);
   };
 
   const removeKeyValue = (index) => {
-    setTheKeys(theKeys.filter((_, i) => i !== index));
-    setTheValues(theValues.filter((_, i) => i !== index));
+    setRqKeys(rqKeys.filter((_, i) => i !== index));
+    setRqValues(rqValues.filter((_, i) => i !== index));
   };
 
   const updateKeys = (index, url) => {
-    const newKeys = [...theKeys];
+    const newKeys = [...rqKeys];
     newKeys[index] = url;
-    setTheKeys(newKeys);
+    setRqKeys(newKeys);
   };
 
   const updateValues = (index, tag) => {
-    const newValues = [...theValues];
+    const newValues = [...rqValues];
     newValues[index] = tag;
-    setTheValues(newValues);
+    setRqValues(newValues);
   };
 
   const clearKeys = () => {
-    setTheKeys(['']);
-    setTheValues(['']);
+    setRqKeys(['']);
+    setRqValues(['']);
   };
 
   useEffect(() => {
-    setTheKeys(['']);
-    setTheValues(['']);
+    setRqKeys(['']);
+    setRqValues(['']);
     setBody('');
   }, [httpMethod]);
 
   return (
-    <Box bgColor='$warmGray800' style={{ flex: 1 }}>
-      <VStack space={4} alignItems='center'>
-        <>
-          <Box
-            display='flex'
-            flexDirection='row'
-            alignItems='center'
-            justifyContent='center'
-            w='100%'
-            mb='$4'
-            mt='$4'
-          >
-            <Text
-              mr='$2'
-              color='$green500'
-              fontSize={10}
-              style={{ fontFamily: 'monospace' }}
-            >
-              Req headers
-            </Text>
-            <Button bgColor='$green500' size='sm' onPress={clearRhKeys}>
-              <ButtonText color='$warmGray800'>Clear</ButtonText>
-            </Button>
-          </Box>
-          {rhKeys.map((rhKey, index) => {
-            return (
-              <KeyValueInput
-                key={index}
-                theKeys={rhKeys}
-                theKey={rhKey}
-                theValue={rhValues[index]}
-                updateRhKeys={updateRhKeys}
-                updateRhValues={updateRhValues}
-                removeRhKeyValue={removeRhKeyValue}
-                addRhKeyValue={addRhKeyValue}
-                index={index}
-              />
-            );
-          })}
-        </>
-        {httpMethod === 'GET' && (
-          <>
-            <Box
-              display='flex'
-              flexDirection='row'
-              alignItems='center'
-              justifyContent='center'
-              w='100%'
-              mb='$4'
-            >
-              <Text
-                mr='$2'
-                color='$green500'
-                fontSize={10}
-                style={{ fontFamily: 'monospace' }}
-              >
-                Req query
-              </Text>
-              <Button bgColor='$green500' size='sm' onPress={clearKeys}>
-                <ButtonText color='$warmGray800'>Clear</ButtonText>
-              </Button>
-            </Box>
-            {theKeys.map((theKey, index) => {
-              return (
-                <KeyValueInput
-                  key={index}
-                  theKeys={theKeys}
-                  theKey={theKey}
-                  theValue={theValues[index]}
-                  updateKeys={updateKeys}
-                  updateValues={updateValues}
-                  removeKeyValue={removeKeyValue}
-                  addKeyValue={addKeyValue}
-                  index={index}
-                />
-              );
-            })}
-          </>
-        )}
-        {(httpMethod === 'POST' ||
-          httpMethod === 'PUT' ||
-          httpMethod === 'PATCH') && (
-          <JsonTextArea body={body} setBody={setBody} />
-        )}
-        {httpMethod === 'DELETE' && (
-          <Text
-            color='$green500'
-            fontSize={16}
-            style={{ fontFamily: 'monospace' }}
-          >
-            No additional input required for DELETE request
-          </Text>
-        )}
+    <Box display='flex' bgColor='$warmGray800'>
+      <VStack space={4} alignItems='center' h='100%'>
+        <ScrollView
+          w='100%'
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+            paddingRight: 4,
+            paddingLeft: 4,
+          }}
+        >
+          <RequestHeaders
+            rhKeys={rhKeys}
+            rhValues={rhValues}
+            addRhKeyValue={addRhKeyValue}
+            removeRhKeyValue={removeRhKeyValue}
+            updateRhKeys={updateRhKeys}
+            updateRhValues={updateRhValues}
+            clearRhKeys={clearRhKeys}
+          />
+          {httpMethod === 'GET' && (
+            <RequestQuery
+              rqKeys={rqKeys}
+              rqValues={rqValues}
+              updateKeys={updateKeys}
+              updateValues={updateValues}
+              removeKeyValue={removeKeyValue}
+              addKeyValue={addKeyValue}
+              clearKeys={clearKeys}
+            />
+          )}
+          {(httpMethod === 'POST' ||
+            httpMethod === 'PUT' ||
+            httpMethod === 'PATCH') && (
+            <RequestBody body={body} setBody={setBody} />
+          )}
+          {httpMethod === 'DELETE' && <RequestDelete />}
+        </ScrollView>
       </VStack>
     </Box>
   );

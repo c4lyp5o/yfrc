@@ -17,6 +17,16 @@ const httpProtocolSelect = [
 
 const errorResponseMessage = "Error: Couldn't fetch data";
 
+const methodsWithBody = [
+  'POST',
+  'PUT',
+  'PATCH',
+  'HEAD',
+  'OPTIONS',
+  'TRACE',
+  'CONNECT',
+];
+
 const predefinedBrowserHeaders = {
   YFRC: [
     {
@@ -129,5 +139,6 @@ export {
   httpMethodSelect,
   httpProtocolSelect,
   errorResponseMessage,
+  methodsWithBody,
   predefinedBrowserHeaders,
 };

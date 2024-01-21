@@ -1,9 +1,6 @@
-import { useWindowDimensions } from 'react-native';
-import { Box, Text, VStack, Heading } from '@gluestack-ui/themed';
+import { Box, Text, Heading } from '@gluestack-ui/themed';
 
 const AboutPage = () => {
-  const layout = useWindowDimensions();
-
   return (
     <Box
       p='$2'
@@ -15,20 +12,20 @@ const AboutPage = () => {
       <Heading
         color='$green500'
         fontSize={20}
+        fontFamily='monospace'
+        textAlign='center'
         mb='$4'
-        style={{ fontFamily: 'monospace', textAlign: 'center' }}
       >
-        Yan's Favorite REST Client 👋
+        Yan's Favorite REST Client
       </Heading>
       <Text
         selectable={true}
         fontSize={16}
+        fontFamily='monospace'
+        textAlign='center'
         color='$green500'
-        style={{ fontFamily: 'monospace', textAlign: 'center' }}
       >
-        🚀 We are a team of passionate developers dedicated to creating the best
-        user experience possible. 💡 Our mission is to make software that not
-        only works well, but also looks great and is easy to use.
+        YFRC
       </Text>
     </Box>
   );

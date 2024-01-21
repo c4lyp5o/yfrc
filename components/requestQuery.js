@@ -2,14 +2,14 @@ import { Text, Box, Button, ButtonText } from '@gluestack-ui/themed';
 
 import KeyValueInput from './keyValueInput';
 
-const RequestHeaders = ({
-  rhKeys,
-  rhValues,
-  addRhKeyValue,
-  removeRhKeyValue,
-  updateRhKeys,
-  updateRhValues,
-  clearRhKeys,
+const RequestQuery = ({
+  rqKeys,
+  rqValues,
+  updateKeys,
+  updateValues,
+  removeKeyValue,
+  addKeyValue,
+  clearKeys,
 }) => {
   return (
     <>
@@ -22,23 +22,23 @@ const RequestHeaders = ({
         mt='$2'
       >
         <Text mr='$2' color='white' fontSize={10} fontFamily='monospace'>
-          Headers
+          Query
         </Text>
-        <Button variant='outline' size='xs' onPress={clearRhKeys}>
+        <Button variant='outline' size='xs' onPress={clearKeys}>
           <ButtonText color='white'>Clear</ButtonText>
         </Button>
       </Box>
-      {rhKeys.map((rhKey, index) => {
+      {rqKeys.map((theKey, index) => {
         return (
           <KeyValueInput
             key={index}
-            theKeys={rhKeys}
-            theKey={rhKey}
-            theValue={rhValues[index]}
-            updateKeys={updateRhKeys}
-            updateValues={updateRhValues}
-            removeKeyValue={removeRhKeyValue}
-            addKeyValue={addRhKeyValue}
+            theKeys={rqKeys}
+            theKey={theKey}
+            theValue={rqValues[index]}
+            updateKeys={updateKeys}
+            updateValues={updateValues}
+            removeKeyValue={removeKeyValue}
+            addKeyValue={addKeyValue}
             index={index}
           />
         );
@@ -47,4 +47,4 @@ const RequestHeaders = ({
   );
 };
 
-export default RequestHeaders;
+export default RequestQuery;

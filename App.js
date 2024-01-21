@@ -7,38 +7,12 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import { config } from '@gluestack-ui/config';
-import {
-  GluestackUIProvider,
-  Box,
-  Text,
-  Button,
-  ButtonText,
-  ButtonSpinner,
-  Input,
-  InputField,
-  Select,
-  SelectTrigger,
-  SelectInput,
-  SelectIcon,
-  SelectPortal,
-  SelectBackdrop,
-  SelectContent,
-  SelectDragIndicatorWrapper,
-  SelectDragIndicator,
-  SelectItem,
-  Icon,
-  ChevronDownIcon,
-  VStack,
-  useToast,
-  Toast,
-  ToastDescription,
-  ToastTitle,
-} from '@gluestack-ui/themed';
+import { GluestackUIProvider, Box, Text, VStack } from '@gluestack-ui/themed';
 
 import {
-  httpMethodSelect,
   httpProtocolSelect,
   predefinedBrowserHeaders,
+  methodsWithBody,
 } from './helpers/constants';
 
 import RequestPage from './components/request';
@@ -46,9 +20,15 @@ import ResponsePage from './components/response';
 import HeadersPage from './components/headers';
 import AboutPage from './components/about';
 
+import UrlInput from './components/urlInput';
+import HttpMethodSelect from './components/httpMethodSelect';
+import HttpProtocolSelect from './components/httpProtocolSelect';
+
+import { useShowToast } from './hooks/useShowToast';
+
 function Container() {
   const insets = useSafeAreaInsets();
-  const toast = useToast();
+  const showToast = useShowToast();
 
   // default request headers
   const yfrcHeaders = predefinedBrowserHeaders['YFRC'];
@@ -59,8 +39,8 @@ function Container() {
   // request
   const [rhKeys, setRhKeys] = useState(yfrcHeaders.map((h) => h.key));
   const [rhValues, setRhValues] = useState(yfrcHeaders.map((h) => h.value));
-  const [theKeys, setTheKeys] = useState(['']);
-  const [theValues, setTheValues] = useState(['']);
+  const [rqKeys, setRqKeys] = useState(['']);
+  const [rqValues, setRqValues] = useState(['']);
   const [body, setBody] = useState('');
 
   // api call
@@ -71,12 +51,8 @@ function Container() {
   const [response, setResponse] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
 
-  const setHttpMethodSelect = (value) => {
-    setHttpMethod(value);
-  };
-
-  const setHttpProtocolSelect = (label) => {
-    setHttpProtocol(label);
+  const handleUrlChange = (value) => {
+    setUrl(value.toLowerCase());
   };
 
   const resetResponse = () => {
@@ -85,18 +61,18 @@ function Container() {
     setResponse('');
   };
 
-  function isValidUrl(url) {
+  const isValidUrl = (url) => {
     try {
       new URL(url);
       return true;
     } catch (_) {
       return false;
     }
-  }
+  };
 
   const executeCall = () => {
     if (url === '') {
-      return;
+      showToast('URL is empty');
     }
 
     async function fetchData() {
@@ -110,26 +86,25 @@ function Container() {
         let realUrl = selectedProtocol.trueValue + url;
 
         if (!isValidUrl(realUrl)) {
-          throw new Error('Invalid URL');
+          return showToast('Invalid URL');
         }
 
-        toast.show({
-          placement: 'bottom',
-          render: ({ id }) => {
-            const toastId = 'toast-' + id;
-            return (
-              <Toast nativeID={toastId} action='info' variant='solid'>
-                <VStack space='xs'>
-                  <ToastTitle>Running...</ToastTitle>
-                </VStack>
-              </Toast>
-            );
-          },
-        });
+        if (methodsWithBody.includes(httpMethod)) {
+          if (body === '') {
+            showToast('Body is empty');
+          } else {
+            try {
+              JSON.parse(body);
+            } catch (err) {
+              return showToast('Invalid JSON body');
+            }
+          }
+        }
+
+        showToast('Fetching data...');
 
         let response;
 
-        // process headers
         const headers = {};
         for (let i = 0; i < rhKeys.length; i++) {
           if (rhKeys[i] !== '') {
@@ -140,9 +115,9 @@ function Container() {
         switch (httpMethod) {
           case 'GET':
             let query = '';
-            for (let i = 0; i < theKeys.length; i++) {
-              if (theKeys[i] !== '') {
-                query += `${theKeys[i]}=${theValues[i]}&`;
+            for (let i = 0; i < rqKeys.length; i++) {
+              if (rqKeys[i] !== '') {
+                query += `${rqKeys[i]}=${rqValues[i]}&`;
               }
             }
             if (query !== '') {
@@ -175,7 +150,7 @@ function Container() {
             response = await fetch(realUrl, {
               method: 'DELETE',
               headers: {
-                'Content-Type': 'application/json',
+                ...headers,
               },
             });
             break;
@@ -186,19 +161,29 @@ function Container() {
         for (const [key, value] of response.headers) {
           setResponseHeaders((prev) => ({ ...prev, [key]: value }));
         }
+
         setResponseStatus(response.status);
+
         const contentType = response.headers.get('content-type');
 
-        if (contentType && contentType.indexOf('application/json') !== -1) {
-          const json = await response.json();
-          setResponse(json);
-        } else {
-          const text = await response.text();
-          setResponse(text);
+        switch (true) {
+          case contentType && contentType.includes('application/json'):
+            const json = await response.json();
+            setResponse(json);
+            break;
+          case contentType && contentType.startsWith('image/'):
+            setResponse(realUrl);
+            break;
+          case contentType && contentType.includes('text/'):
+            const text = await response.text();
+            setResponse(text);
+            break;
+          default:
+            setResponse('Response is neither JSON, text nor image');
         }
       } catch (err) {
         console.log(err);
-        setResponse(JSON.stringify(err, null, 2));
+        setResponse(JSON.stringify(err));
       } finally {
         setIsExecuting(false);
       }
@@ -213,107 +198,22 @@ function Container() {
       <Box h='94%' bg='white'>
         <VStack space='sm' reversed={false} mb='$2'>
           <Box flexDirection='row' alignItems='center' w='100%' px='$2'>
-            <Select
-              mr='$2'
-              w='35%'
-              onValueChange={(value) => setHttpMethodSelect(value)}
-            >
-              <SelectTrigger variant='outline' size='sm'>
-                <SelectInput value={httpMethod} />
-                <SelectIcon mr='$3'>
-                  <Icon as={ChevronDownIcon} />
-                </SelectIcon>
-              </SelectTrigger>
-              <SelectPortal>
-                <SelectBackdrop />
-                <SelectContent>
-                  <SelectDragIndicatorWrapper>
-                    <SelectDragIndicator />
-                  </SelectDragIndicatorWrapper>
-                  {httpMethodSelect.map((item) => (
-                    <SelectItem
-                      key={item.value}
-                      label={item.label}
-                      value={item.value}
-                    />
-                  ))}
-                </SelectContent>
-              </SelectPortal>
-            </Select>
-            <Select
-              w='30%'
-              onValueChange={(label) => setHttpProtocolSelect(label)}
-            >
-              <SelectTrigger variant='outline' size='sm'>
-                <SelectInput value={httpProtocol} />
-                <SelectIcon mr='$3'>
-                  <Icon as={ChevronDownIcon} />
-                </SelectIcon>
-              </SelectTrigger>
-              <SelectPortal>
-                <SelectBackdrop />
-                <SelectContent>
-                  <SelectDragIndicatorWrapper>
-                    <SelectDragIndicator />
-                  </SelectDragIndicatorWrapper>
-                  {httpProtocolSelect.map((item) => (
-                    <SelectItem
-                      key={item.value}
-                      label={item.label}
-                      value={item.value}
-                    />
-                  ))}
-                </SelectContent>
-              </SelectPortal>
-            </Select>
+            <HttpMethodSelect
+              httpMethod={httpMethod}
+              setHttpMethod={setHttpMethod}
+            />
+            <HttpProtocolSelect
+              httpProtocol={httpProtocol}
+              setHttpProtocol={setHttpProtocol}
+            />
           </Box>
           <Box flexDirection='row' alignItems='center' w='100%' px='$2'>
-            <Input
-              variant='outline'
-              size='sm'
-              h='$10'
-              w='85%'
-              marginRight='$2'
-              isDisabled={false}
-              isInvalid={false}
-              isReadOnly={false}
-            >
-              <InputField
-                style={{ fontFamily: 'monospace' }}
-                fontSize={12}
-                value={url}
-                onChangeText={(text) => setUrl(text.toLocaleLowerCase())}
-              />
-              {url ? (
-                <Button
-                  onPress={() => setUrl('')}
-                  size='sm'
-                  variant='outline'
-                  w='15%'
-                  h='100%'
-                  action='primary'
-                >
-                  <ButtonText size='sm' color='$black'>
-                    X
-                  </ButtonText>
-                </Button>
-              ) : null}
-            </Input>
-            <Button
-              size='sm'
-              w='12%'
-              variant='solid'
-              action='primary'
-              isDisabled={isExecuting}
-              isFocusVisible={false}
-              onPress={executeCall}
-            >
-              {isExecuting ? (
-                <ButtonSpinner size='small' />
-              ) : (
-                <ButtonText>&gt;</ButtonText>
-              )}
-            </Button>
+            <UrlInput
+              url={url}
+              setUrl={handleUrlChange}
+              executeCall={executeCall}
+              isExecuting={isExecuting}
+            />
           </Box>
         </VStack>
         <Tab.Navigator initialRouteName='Res'>
@@ -326,10 +226,10 @@ function Container() {
                 rhValues={rhValues}
                 setRhKeys={setRhKeys}
                 setRhValues={setRhValues}
-                theKeys={theKeys}
-                theValues={theValues}
-                setTheKeys={setTheKeys}
-                setTheValues={setTheValues}
+                rqKeys={rqKeys}
+                rqValues={rqValues}
+                setRqKeys={setRqKeys}
+                setRqValues={setRqValues}
                 body={body}
                 setBody={setBody}
               />

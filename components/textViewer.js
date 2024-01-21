@@ -5,13 +5,7 @@ const TextViewer = ({ textData }) => {
   const formatText = (text) => {
     return text.split(/(\n|\r)/).map((segment, index) => {
       return (
-        <Text
-          key={index}
-          selectable={true}
-          fontSize={12}
-          color='$white'
-          style={{ fontFamily: 'monospace' }}
-        >
+        <Text key={index} selectable={true} fontSize={10} color='$white'>
           {segment}
         </Text>
       );
@@ -22,21 +16,16 @@ const TextViewer = ({ textData }) => {
     return (
       <Text
         selectable={true}
-        fontSize={12}
-        color='$green500'
-        style={{ fontFamily: 'monospace' }}
+        fontSize={10}
+        fontFamily='monospace'
+        color='white'
       >
         No response data
       </Text>
     );
 
   return (
-    <Text
-      selectable={true}
-      fontSize={12}
-      color='$green500'
-      style={{ fontFamily: 'monospace' }}
-    >
+    <Text selectable={true} fontSize={10} fontFamily='monospace' color='white'>
       {formatText(textData)}
     </Text>
   );

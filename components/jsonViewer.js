@@ -9,9 +9,9 @@ const JsonViewer = ({ jsonData }) => {
           <Text
             key={index}
             selectable={true}
-            fontSize={12}
+            fontSize={10}
+            fontFamily='monospace'
             color='white'
-            style={{ fontFamily: 'monospace' }}
           >
             {segment}
           </Text>
@@ -27,9 +27,9 @@ const JsonViewer = ({ jsonData }) => {
           <Text
             key={index}
             selectable={true}
-            fontSize={12}
-            color='blue'
-            style={{ fontFamily: 'monospace' }}
+            fontSize={10}
+            fontFamily='monospace'
+            color='$blue400'
           >
             {segment}
           </Text>
@@ -39,9 +39,9 @@ const JsonViewer = ({ jsonData }) => {
           <Text
             key={index}
             selectable={true}
-            fontSize={12}
+            fontSize={10}
+            fontFamily='monospace'
             color='$green500'
-            style={{ fontFamily: 'monospace' }}
           >
             {segment}
           </Text>
@@ -55,9 +55,9 @@ const JsonViewer = ({ jsonData }) => {
   return (
     <Text
       selectable={true}
-      fontSize={12}
+      fontSize={10}
+      fontFamily='monospace'
       color='$green500'
-      style={{ fontFamily: 'monospace' }}
     >
       {formatJsonText(stringifiedJson)}
     </Text>

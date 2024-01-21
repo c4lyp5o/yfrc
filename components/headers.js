@@ -8,9 +8,9 @@ const HeadersPage = ({ responseHeaders }) => {
         {Object.entries(responseHeaders).map(([key, value]) => {
           return (
             <Text
-              color='$green500'
-              fontSize={12}
-              style={{ fontFamily: 'monospace' }}
+              color='white'
+              fontSize={10}
+              fontFamily='monospace'
               selectable={true}
               key={key}
             >

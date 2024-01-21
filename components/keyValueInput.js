@@ -21,12 +21,12 @@ const KeyValueInput = ({
       display='flex'
       flexDirection='row'
       alignItems='center'
-      justifyContent='center'
+      // justifyContent='center'
       w='100%'
-      mb='$2'
+      mb='$1'
     >
       <Input
-        variant='outline'
+        variant='underlined'
         size='sm'
         h='$10'
         w='35%'
@@ -36,8 +36,9 @@ const KeyValueInput = ({
         isReadOnly={false}
       >
         <InputField
-          color='$green500'
-          style={{ fontFamily: 'monospace' }}
+          color='white'
+          fontSize={12}
+          fontFamily='monospace'
           value={theKey}
           onChangeText={(text) => {
             updateKeys(index, text);
@@ -45,7 +46,7 @@ const KeyValueInput = ({
         />
       </Input>
       <Input
-        variant='outline'
+        variant='underlined'
         size='sm'
         h='$10'
         w='35%'
@@ -55,8 +56,9 @@ const KeyValueInput = ({
         isReadOnly={false}
       >
         <InputField
-          color='$green500'
-          style={{ fontFamily: 'monospace' }}
+          color='white'
+          fontSize={12}
+          fontFamily='monospace'
           value={theValue}
           onChangeText={(text) => {
             updateValues(index, text);
@@ -65,18 +67,23 @@ const KeyValueInput = ({
       </Input>
       {index === theKeys.length - 1 && (
         <Box marginRight={4}>
-          <Button bgColor='$green500' size='sm' onPress={addKeyValue}>
-            <ButtonText color='$warmGray800'>+</ButtonText>
+          <Button variant='outline' size='sm' onPress={addKeyValue}>
+            <ButtonText color='white' fontWeight='$extrabold'>
+              +
+            </ButtonText>
           </Button>
         </Box>
       )}
       {theKeys.length > 1 && (
         <Button
-          bgColor='$red500'
+          Button
+          variant='outline'
           size='sm'
           onPress={() => removeKeyValue(index)}
         >
-          <ButtonText color='$warmGray800'>-</ButtonText>
+          <ButtonText color='white' fontWeight='$extrabold'>
+            -
+          </ButtonText>
         </Button>
       )}
     </Box>
