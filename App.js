@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -20,15 +20,18 @@ import ResponsePage from './components/response';
 import HeadersPage from './components/headers';
 import AboutPage from './components/about';
 
-import UrlInput from './components/urlInput';
+import HistorySelect from './components/historySelect';
 import HttpMethodSelect from './components/httpMethodSelect';
 import HttpProtocolSelect from './components/httpProtocolSelect';
+import UrlInput from './components/urlInput';
 
 import { useShowToast } from './hooks/useShowToast';
+import { useStorage } from './hooks/useStorage';
 
 function Container() {
   const insets = useSafeAreaInsets();
   const showToast = useShowToast();
+  const { saveToStorage, getFromStorage, clearStorage } = useStorage();
 
   // default request headers
   const yfrcHeaders = predefinedBrowserHeaders['YFRC'];
@@ -51,8 +54,11 @@ function Container() {
   const [response, setResponse] = useState('');
   const [isExecuting, setIsExecuting] = useState(false);
 
+  // history
+  const [history, setHistory] = useState(['']);
+
   const handleUrlChange = (value) => {
-    setUrl(value.toLowerCase());
+    setUrl(value);
   };
 
   const resetResponse = () => {
@@ -72,7 +78,7 @@ function Container() {
 
   const executeCall = () => {
     if (url === '') {
-      showToast('URL is empty');
+      return showToast('URL is empty');
     }
 
     async function fetchData() {
@@ -103,23 +109,23 @@ function Container() {
 
         showToast('Fetching data...');
 
-        let response;
+        let headers, query, response;
 
-        const headers = {};
-        for (let i = 0; i < rhKeys.length; i++) {
-          if (rhKeys[i] !== '') {
-            headers[rhKeys[i]] = rhValues[i];
+        headers = rhKeys.reduce((acc, key, i) => {
+          if (key !== '') {
+            acc[key] = rhValues[i];
           }
-        }
+          return acc;
+        }, {});
 
         switch (httpMethod) {
           case 'GET':
-            let query = '';
-            for (let i = 0; i < rqKeys.length; i++) {
-              if (rqKeys[i] !== '') {
-                query += `${rqKeys[i]}=${rqValues[i]}&`;
+            query = rqKeys.reduce((acc, key, i) => {
+              if (key !== '') {
+                acc += `${key}=${rqValues[i]}&`;
               }
-            }
+              return acc;
+            }, '');
             if (query !== '') {
               query = '?' + query.slice(0, -1);
             }
@@ -165,7 +171,6 @@ function Container() {
         setResponseStatus(response.status);
 
         const contentType = response.headers.get('content-type');
-
         switch (true) {
           case contentType && contentType.includes('application/json'):
             const json = await response.json();
@@ -181,9 +186,29 @@ function Container() {
           default:
             setResponse('Response is neither JSON, text nor image');
         }
+
+        let currentId;
+        if (!history) {
+          console.log('history is null');
+          currentId = 0;
+        } else {
+          currentId = history.length;
+        }
+        const request = {
+          id: currentId,
+          url,
+          method: httpMethod,
+          protocol: httpProtocol,
+          headers,
+          query,
+          body,
+        };
+        await saveToStorage(request);
+        const latestHistory = await getFromStorage();
+        setHistory(latestHistory);
       } catch (err) {
-        console.log(err);
-        setResponse(JSON.stringify(err));
+        console.error(err);
+        setResponse(err);
       } finally {
         setIsExecuting(false);
       }
@@ -192,12 +217,47 @@ function Container() {
     fetchData();
   };
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const history = await getFromStorage();
+        setHistory(history);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function clearAllData() {
+      try {
+        await clearStorage();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // process.env.EXPO_PUBLIC_BUILD_CHANNEL === 'dev' && clearAllData();
+
+    fetchData();
+  }, []);
+
   return (
     <>
       <Box bg='white' style={{ paddingTop: insets.top }} />
       <Box h='94%' bg='white'>
         <VStack space='sm' reversed={false} mb='$2'>
           <Box flexDirection='row' alignItems='center' w='100%' px='$2'>
+            <HistorySelect
+              history={history}
+              setUrl={setUrl}
+              setHttpMethod={setHttpMethod}
+              setHttpProtocol={setHttpProtocol}
+              setRhKeys={setRhKeys}
+              setRhValues={setRhValues}
+              setRqKeys={setRqKeys}
+              setRqValues={setRqValues}
+              setBody={setBody}
+              setIsExecuting={setIsExecuting}
+            />
             <HttpMethodSelect
               httpMethod={httpMethod}
               setHttpMethod={setHttpMethod}
