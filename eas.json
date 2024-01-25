@@ -4,6 +4,11 @@
             "developmentClient": true,
             "distribution": "internal"
         },
+        "sideload": {
+            "android": {
+                "buildType": "apk"
+            }
+        },
         "preview": {
             "distribution": "internal"
         },
